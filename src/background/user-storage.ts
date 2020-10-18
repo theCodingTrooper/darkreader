@@ -17,6 +17,24 @@ export default class UserStorage {
         this.settings = await this.loadSettingsFromStorage();
     }
 
+    private migrateSiteList(settings: UserSettings) {
+        if ((settings as any).siteList) {
+            const temp = settings.siteListEnabled.length > 0 ? settings.siteListEnabled : null;
+            if ((settings as any).applyToListedOnly) {
+                settings.siteListDisabled = [];
+                settings.siteListEnabled = (settings as any).siteList;
+            } else {
+                settings.siteListDisabled = (settings as any).siteList;
+                settings.siteListEnabled = [];
+            }
+            if (temp) {
+                settings.siteListEnabled = [...temp, ...settings.siteListEnabled];
+            }
+            delete (settings as any).siteList;
+            delete (settings as any).applyToListedOnly;
+        }
+    }
+
     private fillDefaults(settings: UserSettings) {
         settings.theme = {...DEFAULT_THEME, ...settings.theme};
         settings.time = {...DEFAULT_SETTINGS.time, ...settings.time};
@@ -35,6 +53,7 @@ export default class UserStorage {
         }
         if (!local.syncSettings) {
             this.fillDefaults(local);
+            this.migrateSiteList(local);
             return local;
         }
 
@@ -44,11 +63,13 @@ export default class UserStorage {
             local.syncSettings = false;
             this.set({syncSettings: false});
             this.saveSyncSetting(false);
+            this.migrateSiteList(local);
             return local;
         }
 
         const sync = await readSyncStorage(DEFAULT_SETTINGS);
         this.fillDefaults(sync);
+        this.migrateSiteList(local);
         return sync;
     }
 
@@ -84,18 +105,9 @@ export default class UserStorage {
     });
 
     set($settings: Partial<UserSettings>) {
-        if ($settings.siteList) {
-            if (!Array.isArray($settings.siteList)) {
-                const list = [];
-                for (const key in ($settings.siteList as any)) {
-                    const index = Number(key);
-                    if (!isNaN(index)) {
-                        list[index] = $settings.siteList[key];
-                    }
-                }
-                $settings.siteList = list;
-            }
-            const siteList = $settings.siteList.filter((pattern) => {
+        if ($settings.siteListDisabled || $settings.siteListEnabled) {
+
+            const siteListDisabled = $settings.siteListDisabled.filter((pattern) => {
                 let isOK = false;
                 try {
                     isURLMatched('https://google.com/', pattern);
@@ -106,7 +118,18 @@ export default class UserStorage {
                 }
                 return isOK && pattern !== '/';
             });
-            $settings = {...$settings, siteList};
+            const siteListEnabled = $settings.siteListEnabled.filter((pattern) => {
+                let isOK = false;
+                try {
+                    isURLMatched('https://google.com/', pattern);
+                    isURLMatched('[::1]:1337', pattern);
+                    isOK = true;
+                } catch (err) {
+                    console.warn(`Pattern "${pattern}" excluded`);
+                }
+                return isOK && pattern !== '/';
+            });
+            $settings = {...$settings, siteListDisabled, siteListEnabled};
         }
         this.settings = {...this.settings, ...$settings};
     }

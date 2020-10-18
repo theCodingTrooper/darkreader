@@ -23,9 +23,8 @@ export function getMockData(override = {} as Partial<ExtensionData>): ExtensionD
                 styleSystemControls: true,
             } as Theme,
             customThemes: [],
-            siteList: [],
+            siteListDisabled: [],
             siteListEnabled: [],
-            applyToListedOnly: false,
             changeBrowserTheme: false,
             enableForPDF: true,
             enableForProtectedPages: false,
@@ -62,6 +61,7 @@ export function getMockData(override = {} as Partial<ExtensionData>): ExtensionD
             hasCustomFilterFixes: false,
             hasCustomStaticFixes: false,
         },
+        darkSites: [],
     } as ExtensionData, override);
 }
 
@@ -101,11 +101,11 @@ export function createConnectorMock() {
         },
         toggleURL(url) {
             const pattern = getURLHostOrProtocol(url);
-            const index = data.settings.siteList.indexOf(pattern);
+            const index = data.settings.siteListDisabled.indexOf(pattern);
             if (index >= 0) {
-                data.settings.siteList.splice(index, 1, pattern);
+                data.settings.siteListDisabled.splice(index, 1, pattern);
             } else {
-                data.settings.siteList.push(pattern);
+                data.settings.siteListDisabled.push(pattern);
             }
             listener(data);
         },

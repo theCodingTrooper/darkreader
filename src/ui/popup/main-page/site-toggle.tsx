@@ -5,7 +5,7 @@ import ControlGroup from '../control-group';
 import {ViewProps} from '../types';
 
 export default function SiteToggleGroup(props: ViewProps) {
-    const isPageEnabled = isURLEnabled(props.tab.url, props.data.settings, props.tab);
+    const isPageEnabled = isURLEnabled(props.tab.url, props.data.settings, props.data.darkSites, props.tab);
     const descriptionText = isPDF(props.tab.url) ?
         isPageEnabled ?
             'Enabled for PDF files' :

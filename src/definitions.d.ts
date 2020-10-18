@@ -15,6 +15,7 @@ export interface ExtensionData {
         hasCustomFilterFixes: boolean;
         hasCustomStaticFixes: boolean;
     };
+    darkSites: string[];
 }
 
 export interface ExtensionActions {
@@ -76,9 +77,9 @@ export interface UserSettings {
     theme: FilterConfig;
     presets: ThemePreset[];
     customThemes: CustomSiteConfig[];
-    siteList: string[];
+    siteListDisabled: string[];
     siteListEnabled: string[];
-    applyToListedOnly: boolean;
+
     changeBrowserTheme: boolean;
     notifyOfNews: boolean;
     syncSettings: boolean;

@@ -1,5 +1,5 @@
 import {m} from 'malevic';
-import {Toggle, TextList, Shortcut} from '../../../controls';
+import {TextList, Shortcut} from '../../../controls';
 import {getLocalMessage} from '../../../../utils/locales';
 import {ExtWrapper} from '../../../../definitions';
 
@@ -15,21 +15,14 @@ export default function SiteListSettings({data, actions, isFocused}: SiteListSet
 
     return (
         <section class="site-list-settings">
-            <Toggle
-                class="site-list-settings__toggle"
-                checked={data.settings.applyToListedOnly}
-                labelOn={getLocalMessage('invert_listed_only')}
-                labelOff={getLocalMessage('not_invert_listed')}
-                onChange={(value) => actions.changeSettings({applyToListedOnly: value})}
-            />
             <TextList
                 class="site-list-settings__text-list"
                 placeholder="google.com/maps"
-                values={data.settings.siteList}
+                values={data.settings.siteListDisabled}
                 isFocused={isFocused}
                 onChange={(values) => {
                     if (values.every(isSiteUrlValid)) {
-                        actions.changeSettings({siteList: values});
+                        actions.changeSettings({siteListDisabled: values});
                     }
                 }}
             />

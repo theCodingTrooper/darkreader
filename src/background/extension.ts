@@ -190,6 +190,7 @@ export class Extension {
                 hasCustomFilterFixes: this.devtools.hasCustomFilterFixes(),
                 hasCustomStaticFixes: this.devtools.hasCustomStaticFixes(),
             },
+            darkSites: this.config.DARK_SITES,
         };
     }
 
@@ -305,20 +306,37 @@ export class Extension {
 
     toggleURL(url: string) {
         const isInDarkList = isURLInList(url, this.config.DARK_SITES);
-        const siteList = isInDarkList ?
-            this.user.settings.siteListEnabled.slice() :
-            this.user.settings.siteList.slice();
-        const pattern = getURLHostOrProtocol(url);
-        const index = siteList.indexOf(pattern);
-        if (index < 0) {
-            siteList.push(pattern);
-        } else {
-            siteList.splice(index, 1);
-        }
         if (isInDarkList) {
+            const siteList = this.user.settings.siteListEnabled.slice();
+            const pattern = getURLHostOrProtocol(url);
+            const index = siteList.indexOf(pattern);
+            if (index < 0) {
+                siteList.push(pattern);
+            } else {
+                siteList.splice(index, 1);
+            }
             this.changeSettings({siteListEnabled: siteList});
         } else {
-            this.changeSettings({siteList});
+            let pattern = getURLHostOrProtocol(url);
+            const maindomain = pattern.substr(pattern.indexOf('.') + 1);
+            const disabledListIndex = this.user.settings.siteListDisabled.indexOf(pattern);
+            const enabledListIndex = this.user.settings.siteListEnabled.indexOf(pattern);
+            const siteListDisabled = this.user.settings.siteListDisabled.slice();
+            const siteListEnabled = this.user.settings.siteListEnabled.slice();
+             
+            if (enabledListIndex > -1) {
+                siteListEnabled.splice(enabledListIndex, 1);
+                if (siteListEnabled.indexOf(maindomain) > -1) {
+                    pattern = `!${pattern}`;
+                }
+                siteListDisabled.push(pattern);
+            } else if (disabledListIndex > -1) {
+                siteListDisabled.splice(disabledListIndex, 1);
+                siteListEnabled.push(pattern);
+            } else {
+                siteListDisabled.push(pattern);
+            }
+            this.changeSettings({siteListDisabled, siteListEnabled});
         }
     }
 
@@ -370,8 +388,7 @@ export class Extension {
     //----------------------
 
     private getURLInfo(url: string): TabInfo {
-        const {DARK_SITES} = this.config;
-        const isInDarkList = isURLInList(url, DARK_SITES);
+        const isInDarkList = isURLInList(url, this.config.DARK_SITES);
         const isProtected = !canInjectScript(url);
         return {
             url,
@@ -382,7 +399,7 @@ export class Extension {
 
     private getTabMessage = (url: string, frameURL: string) => {
         const urlInfo = this.getURLInfo(url);
-        if (this.isEnabled() && isURLEnabled(url, this.user.settings, urlInfo)) {
+        if (this.isEnabled() && isURLEnabled(url, this.user.settings, this.config.DARK_SITES, urlInfo)) {
             const custom = this.user.settings.customThemes.find(({url: urlList}) => isURLInList(url, urlList));
             const preset = custom ? null : this.user.settings.presets.find(({urls}) => isURLInList(url, urls));
             const theme = custom ? custom.theme : preset ? preset.theme : this.user.settings.theme;

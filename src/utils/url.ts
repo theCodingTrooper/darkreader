@@ -165,22 +165,18 @@ export function isPDF(url: string) {
     return false;
 }
 
-export function isURLEnabled(url: string, userSettings: UserSettings, {isProtected, isInDarkList}) {
+export function isURLEnabled(url: string, userSettings: UserSettings, darkSiteList: string[], {isProtected}) {
     if (isProtected && !userSettings.enableForProtectedPages) {
         return false;
     }
     if (isPDF(url)) {
         return userSettings.enableForPDF;
     }
-    const isURLInUserList = isURLInList(url, userSettings.siteList);
-    if (userSettings.applyToListedOnly) {
-        return isURLInUserList;
-    }
-    // TODO: Use `siteListEnabled`, `siteListDisabled`, `enabledByDefault` options.
-    // Delete `siteList` and `applyToListedOnly` options, transfer user's values.
-    const isURLInEnabledList = isURLInList(url, userSettings.siteListEnabled);
-    if (isURLInEnabledList && isInDarkList) {
-        return true;
-    }
-    return (!isInDarkList && !isURLInUserList);
+
+    const enabledSiteList = [];
+    userSettings.siteListEnabled.forEach((item) => {
+        enabledSiteList.push(`!${item}`);
+    });
+    const isURLDisabled = isURLInList(url, [...userSettings.siteListDisabled, ...darkSiteList, ...enabledSiteList]);
+    return !isURLDisabled;
 }

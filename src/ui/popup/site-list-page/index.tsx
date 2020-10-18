@@ -6,7 +6,7 @@ import CheckButton from '../check-button';
 
 export default function SiteListPage(props: ViewProps) {
     function onSiteListChange(sites: string[]) {
-        props.actions.changeSettings({siteList: sites});
+        props.actions.changeSettings({siteListDisabled: sites});
     }
     function onInvertPDFChange(checked: boolean) {
         props.actions.changeSettings({enableForPDF: checked});
@@ -14,15 +14,11 @@ export default function SiteListPage(props: ViewProps) {
     function onEnableForProtectedPages(value: boolean) {
         props.actions.changeSettings({enableForProtectedPages: value});
     }
-
-    const label = props.data.settings.applyToListedOnly ?
-        'Enable on these websites' :
-        'Disable on these websites';
+    // TODO: Make UI compatible with siteListDisabled/siteListEnabled.
     return (
         <div class="site-list-page">
-            <label class="site-list-page__label">{label}</label>
             <SiteList
-                siteList={props.data.settings.siteList}
+                siteList={props.data.settings.siteListDisabled}
                 onChange={onSiteListChange}
             />
             <label class="site-list-page__description">Enter website name and press Enter</label>
